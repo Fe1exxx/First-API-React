@@ -1,45 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export default function App() {
-  const [data, setData] = useState([])
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [maxUsers, setMaxUsers] = useState(5);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const loadingBd = async () => {
       try {
-        const users = await fetch('https://jsonplaceholder.typicode.com/users');
+        const userBD = await fetch(
+          "https://jsonplaceholder.typicode.com/users"
+        );
 
-        if (!users.ok) {
-          throw new Error('Не удалось подключится');
+        if (!userBD.ok) {
+          throw new Error("Ошибка подключение");
         }
 
-        const textUsers = await users.json();
-        setData(textUsers);
-        setLoading(false);
-      }
-      catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
-    }
-    fetchUsers();
-  }, [])
+        const userJSON = await userBD.json();
 
-  if (loading) return <p className='text-gray-200 text-center'>Загрузка...</p>
-  if (error) return <p className='text-red-500 text-center'>Ошибка подключения.</p>
+        setUsers(userJSON);
+        setLoading(false);
+      } catch (error) {
+        setError(error.message);
+        setLoading(false);
+      }
+    };
+
+    loadingBd();
+  }, []);
+
+  if (loading) return <h1>Загрузка</h1>;
+  if (error) return <h1>Ошибка</h1>;
+
+  const userSlice = users.slice(0, maxUsers);
+
+  const addingUsers = () => {
+    setMaxUsers((el) => Math.min(el + 5, users.length));
+  };
 
   return (
-    <div className='grid h-screen place-items-center'>
-      {data.map(el => {
+    <div className="text-center w-200 m-auto">
+      {userSlice.map((el) => {
         return (
-          <div key={el.id} className='border text-center w-100'>
-            <h1 className='text-3xl'>{el.name}</h1>
-            <p>{el.email}</p>
-            <p>{el.address?.city || '-'}</p>
+          <div className="border p-3 m-3">
+            <h1>Имя: {el.name}</h1>
+            <p>{}</p>
           </div>
-        )
+        );
       })}
+      {maxUsers < users.length && (
+        <button className="border p-3 rounded-2xl" onClick={addingUsers}>
+          Добавить пользователей
+        </button>
+      )}
     </div>
-  )
+  );
 }
